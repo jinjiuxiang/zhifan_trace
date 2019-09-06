@@ -1,19 +1,36 @@
 <template>
   <div @click="hideClick">
-    <div id="mountNode" @click="hideClick" @click.stop style="overflow: auto"></div>
+    <div id="mountNode" @click="hideClick" @click.stop style="overflow: auto" v-loading="loadingM2"
+         element-loading-text="数据加载中"
+         element-loading-spinner="el-icon-loading"
+         element-loading-background="rgba(0, 0, 0, 0.8)"></div>
     <div class="hide-cc" @click.stop>
       <div class="hideSource" @click="getData2(2)">追踪来源
+        <div class="mtm"><img src="./../assets/img/san.png" alt=""></div>
+      </div>
+      <div class="hideSource hideS" @click="hideCome">收起来源
         <div class="mtm"><img src="./../assets/img/san.png" alt=""></div>
       </div>
       <div class="hideSource nodata uts" @click="hideClick">追踪来源
         <div class="mtm"><img src="./../assets/img/san.png" alt=""></div>
       </div>
+      <!--<div class="hideSource hideS" @click="deleteClick">收起节点-->
+        <!--<div class="mtm"><img src="./../assets/img/san.png" alt=""></div>-->
+      <!--</div>-->
       <div class="hideGo" @click="getData2(1)">追踪去向</div>
+      <div class="hideGo hideG" @click="hideGo">收起去向</div>
       <div class="hideGo nodata utg" @click="hideClick">追踪去向</div>
+      <div class="hideGo2" @click="deleteNode">删除节点</div>
     </div>
     <!--<div class="stavePhoto" @click="stavePhoto">-->
       <!--保存图谱-->
     <!--</div>-->
+    <div style="width: 250px;height: 50px;background: pink;position: fixed;top: 150px;right: 100px;z-index: 99">
+        <span style="cursor: pointer" @click="upStep">上一步</span>
+        <span style="cursor: pointer" @click="downStep">下一步</span>
+        <span style="cursor: pointer" @click="saveImage('png','rr')">保存图片</span>
+        <span style="cursor: pointer">重置图谱</span>
+    </div>
   </div>
 </template>
 
@@ -23,6 +40,9 @@
   import '@antv/g6/build/plugin.behaviour.analysis';
   import '@antv/g6/build/plugin.layout.dagre';
   import '@antv/g6/build/plugin.tool.tooltip';
+  import html2canvas from "html2canvas";
+  import jsPDF from "jspdf";
+  var arrtmc = [];
     export default {
       name: "antV",
       data(){
@@ -156,7 +176,20 @@
           tarArr:[],
           sorArr:[],
           nonce:0,
-          tags:[]
+          tags:[],
+          preVertexIds:'',
+          backVertexIds:'',
+          stepGroups:[],
+          stepIndex:0,
+          mocbb:"",
+          domX:0,
+          domY:0,
+          centerX:0,
+          centerY:0,
+          zoomNum:0,
+          loadingM2:true,
+          contArr:[],
+          contIdArr:[],
         }
       },
       methods:{
@@ -210,13 +243,7 @@
               let obj = {
                 fill:'#fff'
               };
-              console.log(model.entity);
-              let str = model.entity.toString()
-              if(str.indexOf("实体") != -1){
-                obj.text = str.replace('实体','钱包')
-              }else {
-                obj.text = str
-              }
+              obj.text = model.entity.replace('实体','钱包')
               return obj;
             },
             labelCfg: {
@@ -259,6 +286,7 @@
             tooltip(model) {
               return [
                 ['交易信息',model.value],
+                ['交易次数',model.value],
               ];
             },
           });
@@ -267,33 +295,92 @@
           //   that.graph.highlightSubgraph(items);
           //
           // }
+          let  ar1 = [];
+          let  ar2 = [];
+          if(that.tarArr.length > 0){
+            ar1 = JSON.parse(JSON.stringify(that.tarArr)).pop();
+          }else {
+            ar1 = that.tarArr;
+          }
+          if(that.sorArr.length > 0){
+            ar2 = JSON.parse(JSON.stringify(that.sorArr)).pop();;
+          }else {
+            ar2 = that.sorArr;
+          }
+          let obj = {
+            value:JSON.parse(JSON.stringify(that.dataNew)),
+            to:JSON.parse(JSON.stringify(that.tarArr)),
+            sor:JSON.parse(JSON.stringify(that.sorArr)),
+          }
+          arrtmc.push(obj);
+          console.log(arrtmc);
+          that.mocbb = JSON.stringify(arrtmc)
+          that.stepIndex++;
+          // console.log(that.stepGroups);
           that.graph.read(that.dataNew);
+          that.loadingM2 = false;
           that.items = that.graph.getItems();
-          console.log(that.items);
+          // console.log(that.items);
           that.graph.on('contextmenu', (ev,e)=>{
             //var e = document.all ? window.event : arguments[0] ? arguments[0] : event;
             //console.log(event);
             //event.preventDefault();
             // event.stopPropagation();
             //e.preventDefault();
-            console.log(ev);
+            // console.log(ev);
+
             if(ev.item != null){
-              console.log(ev);
+              // console.log(ev);
               if(ev.item.type == 'node'){
-                console.log('点击了点')
+                // console.log('点击了点')
                 console.log(ev);
+                that.domX = ev.domX;
+                that.domY = ev.domY;
                 $('.hide-cc').css('top', ev.domY + 'px')
                 $('.hide-cc').css('left', ev.domX + 'px')
                 that.walletId = ev.item.model.walletId;
+                const node1 = that.graph.find(that.walletId);
+                that.contArr.push(ev.item.model.style.fill);
+                console.log(that.contArr);
+                that.contIdArr.push(that.walletId);
+                that.graph.update(node1, {
+                  style:{
+                    fill:'red'
+                  }
+                });
+                // if(that.contArr.length == 2){
+                //   that.graph.update(that.contIdArr[0], {
+                //     style:{
+                //       fill:that.contArr[0]
+                //     }
+                //   });
+                //   that.contArr.shift();
+                //   that.contIdArr.shift();
+                // }
                 that.level = ev.item.model.walletId;
                 that.index = ev.item.model.walletId.levelIndex;
-                console.log(ev.item.model);
-                console.log(ev.item.model.hasPreIn);
-                $('.hideSource').css('display',"flex")
-                $('.hideGo').css('display',"flex")
+                that.preVertexIds = ev.item.model.preVertexIds;
+                that.backVertexIds = ev.item.model.backVertexIds;
+                // console.log(ev.item.model);
+                // console.log(ev.item.model.hasPreIn);
+                if(that.sorArr.indexOf(that.walletId) == -1){
+                  $('.hideSource').css('display',"flex")
+                  $('.hideS').css('display',"none");
+                }else {
+                  $('.hideSource').css('display',"none");
+                  $('.hideS').css('display',"flex");
+                }
+
+                if(that.tarArr.indexOf(that.walletId) == -1){
+                  $('.hideGo').css('display',"flex")
+                  $('.hideG').css('display',"none")
+                }else {
+                  $('.hideGo').css('display',"none")
+                  $('.hideG').css('display',"flex")
+                }
                 $('.hide-cc').css('display','block');
-                $('.utg').css('display','none')
                 $('.uts').css('display','none')
+                $('.utg').css('display','none')
                 if(ev.item.model.hasPreIn <=0){
                   $('.hideSource').css('display',"none")
                   $('.uts').css('display','flex')
@@ -310,7 +397,7 @@
                 // that.getData2(1)
                 //that.chooseData(ev.item.model.index)
               }else if(ev.item.type == 'edge'){
-                console.log('点击了线')
+                // console.log('点击了线')
               }
             }
           });
@@ -375,8 +462,7 @@
             $('.hide-cc').css('display',"none");
             // alert('111111')
             if(ev.item.type == 'node'){
-              let st = ev.item.model.entity.toString();
-              if(st.indexOf('实体')== -1 && ev.item.model.category == 2){
+              if(ev.item.model.entity.indexOf('实体')== -1 && ev.item.model.category == 2){
 // console.log(ev.item.model.walletId);
                 that.$emit('walH');
                 that.$emit('txnH');
@@ -394,7 +480,7 @@
 
             }
             if(ev.item.type == 'edge'){
-              console.log(ev.item);
+              // console.log(ev.item);
               that.$emit('walH');
               that.$emit('txnS');
               that.$emit('tLine');
@@ -410,6 +496,9 @@
           graph.on('dragstart', (ev)=>{
             $('.hide-cc').css('display',"none")
           });
+        },
+        deleteClick(){
+          this.graph.remove(this.walletId)
         },
         chooseData(index){
           let that = this;
@@ -437,14 +526,15 @@
                 that.data2.edges.push(val)
               }
             })
-            console.log(that.data2);
+            // console.log(that.data2);
             that.graph.read(that.data2);
           }
 
         },
         getData(address,direction) {
           let that = this;
-          console.log(that.Cookies.get("token"));
+          let arr = [123,123];
+          // console.log(that.Cookies.get("token"));
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method: 'get',
@@ -455,26 +545,48 @@
               walletId: that.walletId,
               level: that.level,
               index: that.index,
-              direction: direction
+              direction: direction,
+              // nonce:that.nonce,
+              // walletId:1,
+              // preVertexIds:'',
+              // backVertexIds:''
+              // preVertexIds:arr
             }
           }).then(res => {
-            console.log(res);
+            // console.log(res);
             that.dataNew.nodes = res.data.data.vertex;
             that.linkNew = res.data.data.edge;
             that.nonce = res.data.data.vertex[0].nonce;
-            console.log(that.nonce);
+            // console.log(that.nonce);
             that.modifyData(res.data.data);
           })
         },
         getData2(direction) {
           let that = this;
+          that.zoomNum = that.graph.getZoom();
+          that.loadingM2 = true;
+          console.log(that.zoomNum);
           if(direction == 1){
             if(that.tarArr.indexOf(that.walletId) == -1){
-              console.log(that.Cookies.get("token"));
+              // console.log(that.Cookies.get("token"));
+              // console.log(that.preVertexIds);
+              if(that.preVertexIds == undefined){
+                that.preVertexIds = ''
+              }
+              if(that.backVertexIds == undefined){
+                that.backVertexIds = ''
+              }
+              let arr = [];
+              if(that.preVertexIds != ''){
+                arr = that.preVertexIds.split(",")
+              }
+              arr.push(that.walletId);
+              that.preVertexIds = arr.join(",")
               that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
               that.ajax({
                 method: 'get',
-                url: that.Config.baseUrl+'/step',
+                // url: 'http://10.0.0.33:5100/api/trace/step',
+                url: that.Config.baseUrl4+'/step',
                 params: {
                   checkpoint:that.Cookies.get('checkpoint'),
                   address: that.Cookies.get('key'),
@@ -482,17 +594,19 @@
                   level: that.level,
                   index: that.index,
                   nonce:that.nonce,
-                  direction: direction
+                  direction: direction,
+                  preVertexIds:that.preVertexIds,
+                  backVertexIds:that.backVertexIds
                 }
               }).then(res => {
-                console.log(res);
+                // console.log(res);
                 that.tarArr.push(that.walletId);
                 $('.hide-cc').css('display','none');
                 res.data.data.vertex.forEach(val=>{
                   let flag = true;
                   that.dataNew.nodes.map(val2 => {
                     if(val.walletId == val2.id){
-                      console.log(val);
+                      // console.log(val);
                       flag = false;
                     }
                   })
@@ -504,7 +618,7 @@
                   let flag2 = true;
                   that.dataNew.edges.map(val2 => {
                     if(val.fromWalletId == val2.fromWalletId && val.toWalletId == val2.toWalletId){
-                      console.log(val);
+                      // console.log(val);
                       flag2 = false;
                     }
                   })
@@ -523,7 +637,7 @@
                   edge:that.dataNew.edges,
                   vertex:that.dataNew.nodes
                 }
-                console.log(obj);
+                // console.log(obj);
                 that.modifyData2(obj);
               })
             }else {
@@ -533,11 +647,25 @@
           }else if(direction == 2){
             console.log(that.sorArr);
             if(that.sorArr.indexOf(that.walletId) == -1){
-              console.log(that.Cookies.get("token"));
+              // console.log(that.Cookies.get("token"));
+              if(that.preVertexIds == undefined){
+                that.preVertexIds = ''
+              }
+              if(that.backVertexIds == undefined){
+                that.backVertexIds = ''
+              }
+              let arr = [];
+              if(that.backVertexIds != ''){
+                arr = that.backVertexIds.split(",")
+              }
+              arr.push(that.walletId);
+              that.backVertexIds = arr.join(",")
               that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
               that.ajax({
                 method: 'get',
-                url: that.Config.baseUrl+'/step',
+                // url: that.Config.baseUrl+'/step',
+                // url:'http://10.0.0.33:5100/api/trace/step',
+                url: that.Config.baseUrl4+'/step',
                 params: {
                   checkpoint: that.Cookies.get('checkpoint'),
                   address: that.Cookies.get('key'),
@@ -545,17 +673,19 @@
                   level: that.level,
                   index: that.index,
                   nonce:that.nonce,
-                  direction: direction
+                  direction: direction,
+                  preVertexIds:that.preVertexIds,
+                  backVertexIds:that.backVertexIds
                 }
               }).then(res => {
-                console.log(res);
+                // console.log(res);
                 that.sorArr.push(that.walletId);
                 $('.hide-cc').css('display','none');
                 res.data.data.vertex.forEach(val=>{
                   let flag = true;
                   that.dataNew.nodes.map(val2 => {
                     if(val.walletId == val2.id){
-                      console.log(val);
+                      // console.log(val);
                       flag = false;
                     }
                   })
@@ -567,7 +697,7 @@
                   let flag2 = true;
                   that.dataNew.edges.map(val2 => {
                     if(val.fromWalletId == val2.fromWalletId && val.toWalletId == val2.toWalletId){
-                      console.log(val);
+                      // console.log(val);
                       flag2 = false;
                     }
                   })
@@ -582,7 +712,7 @@
                   edge:that.dataNew.edges,
                   vertex:that.dataNew.nodes
                 }
-                console.log(obj);
+                // console.log(obj);
                 that.modifyData2(obj);
               })
             }else {
@@ -615,8 +745,16 @@
               if (item.addressHash != undefined) {
                 item.hash = item.addressHash;
               }
-              let fc = item.entity.toString();
-              if(fc.indexOf('实体') == -1 && item.category == 2){
+              if(item.category == 2 || item.category == 0){
+                item.style={
+                  fill: '#55a2d8',
+                  stroke:'#55a2d8'
+                };
+                item.label={ //标签样式
+                  fill:'#ffffff',
+                }
+              }
+              if(item.entity.indexOf('实体') == -1 && item.category == 2){
                 item.style={
                   fill: '#5FB98F',
                   stroke:'#5FB98F'
@@ -664,12 +802,52 @@
               //obj.e.push(link);
             });
             // console.log(idMap);
-            console.log(data);
-            console.log(that.dataNew);
-            console.log(JSON.stringify(that.dataNew));
+            // console.log(data);
+            // console.log(that.dataNew);
+            let obj = {
+              value:JSON.parse(JSON.stringify(that.dataNew)),
+              to:JSON.parse(JSON.stringify(that.tarArr)),
+              sor:JSON.parse(JSON.stringify(that.sorArr)),
+            }
+            arrtmc = JSON.parse(that.mocbb)
+            console.log(arrtmc);
+            console.log(that.mocbb);
+            let arr2 = [];
+            if(arrtmc.length > 0){
+              for(let i =0;i<=that.stepIndex-1;i++){
+                console.log(i);
+                console.log(arrtmc[i]);
+                arr2.push(arrtmc[i])
+              }
+            }
+            console.log(arr2);
+            arrtmc=arr2
+            arrtmc.push(obj);
+            that.mocbb = JSON.stringify(arrtmc)
+            that.stepIndex++;
+            // console.log(arrtmc);
+            // console.log(that.stepIndex);
+            // console.log(arrtmc);
+
             that.graph.read(that.dataNew);
+            const node1 = that.graph.find(that.walletId);
+            that.graph.update(node1, {
+              style:{
+                fill:'red'
+              }
+            });
+            let tf = that.graph.find(that.walletId);
+            console.log(tf);
+            let ufc = that.graph.getDomPoint({
+              x: tf.model.x,
+              y: tf.model.y
+            });
+            console.log(ufc);
+            that.graph.translate(that.domX-ufc.x,that.domY-ufc.y);
+            that.graph.zoom(that.zoomNum);
+            that.loadingM2 = false;
             that.items = that.graph.getItems();
-            console.log(that.items);
+            // console.log(that.items);
           }
         },
         modifyData(data) {
@@ -694,6 +872,15 @@
               item.symbolSize = num;
               if (item.addressHash != undefined) {
                 item.hash = item.addressHash;
+              }
+              if(item.category == 2){
+                item.style={
+                  fill: '#55a2d8',
+                  stroke:'#55a2d8'
+                };
+                item.label={ //标签样式
+                  fill:'#ffffff',
+                }
               }
               if(item.entity.indexOf('实体') == -1 && item.category == 2){
                 item.style={
@@ -725,7 +912,7 @@
               //obj.e.push(link);
             });
             // console.log(idMap);
-            console.log(data);
+            // console.log(data);
             that.dataNew.nodes = data.vertex;
             that.dataNew.edges = data.edge;
             that.startChart();
@@ -733,7 +920,7 @@
         },
         walletClick(id){
           let that = this;
-          console.log(id)
+          // console.log(id)
           that.$emit('walletClick',id)
         },
         //交易记录
@@ -749,21 +936,19 @@
               arr.push(value.txId)
             })
             str = arr.join(',');
-            console.log(str);
+            // console.log(str);
           }
           this.$emit('linkClick',str)
         },
         //获取修改的标签
         getTag(){
-          console.log("修改了白噢钱")
+          // console.log("修改了白噢钱")
           let that = this;
-          console.log(that.Cookies.get('exchangeId2'));
-          console.log(that.Cookies.get('exchangeTag2'));
+          // console.log(that.Cookies.get('exchangeId2'));
+          // console.log(that.Cookies.get('exchangeTag2'));
           let arr = that.Cookies.get('exchangeId2').split(",");
           let arr2 = that.Cookies.get('exchangeTag2').split(",");
           let arr1 = arr.map(Number);
-          console.log(arr.map(Number));
-          console.log(arr2);
           that.dataNew.nodes.forEach((value)=>{
             let st = value.walletId.toString();
             console.log(arr.indexOf(value.walletId));
@@ -888,7 +1073,454 @@
               that.startChart();
             }
           })
+        },
+        //收起去向
+        hideGo(){
+          let that = this;
+          that.zoomNum = that.graph.getZoom();
+          console.log(that.zoomNum);
+          // console.log(that.graph.getNodes());
+          let arr = [];
+          that.graph.getNodes().forEach(value => {
+           if(value.model.preVertexIds != undefined){
+             if(value.model.preVertexIds.indexOf(that.walletId) != -1){
+               if(value.id != that.walletId){
+                 // console.log(value);
+                 arr.push(value.id);
+               }
+             }
+           }
+          })
+          // console.log(arr);
+          let indexArr = [];
+          arr.map(val=>{
+            // that.graph.remove(val)
+            that.dataNew.nodes.map((val2,index)=>{
+              if(val2.id == val){
+                indexArr.push(val);
+              }
+            })
+          })
+          // console.log(indexArr);
+          indexArr.forEach(val=>{
+            that.dataNew.nodes.splice(that.dataNew.nodes.indexOf(val),1);
+          })
+
+          let edgeArr = [];
+          // that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+          // arr.forEach(val=>{
+          //   that.dataNew.edges.forEach((val2,index)=>{
+          //     if(val2.toWalletId != that.walletId){
+          //       edgeArr.push(val);
+          //     }
+          //   })
+          // })
+          // console.log(edgeArr);
+          arr.forEach(val=>{
+            that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+          })
+          // console.log(that.dataNew.nodes);
+          // console.log(that.dataNew.edges);
+          $('.hide-cc').css('display','none');
+          $('.hideGo').css('display',"none")
+          $('.utg').css('display','flex');
+          that.tarArr.splice(that.tarArr.indexOf(that.walletId),1);
+          // let obj = {
+          //   edge:that.dataNew.edges,
+          //   vertex:that.dataNew.nodes
+          // }
+          // console.log(obj);
+          // that.modifyData2(obj);
+          let  ar1 = [];
+          let  ar2 = [];
+          if(that.tarArr.length > 0){
+            ar1 = JSON.parse(JSON.stringify(that.tarArr)).pop();
+          }else {
+            ar1 = that.tarArr;
+          }
+          if(that.sorArr.length > 0){
+            ar2 = JSON.parse(JSON.stringify(that.sorArr)).pop();;
+          }else {
+            ar2 = that.sorArr;
+          }
+          let obj = {
+            value:JSON.parse(JSON.stringify(that.dataNew)),
+            to:JSON.parse(JSON.stringify(that.tarArr)),
+            sor:JSON.parse(JSON.stringify(that.sorArr)),
+          }
+          arrtmc = JSON.parse(that.mocbb)
+          console.log(arrtmc);
+          console.log(that.mocbb);
+          let arr2 = [];
+          if(arrtmc.length > 0){
+            for(let i =0;i<=that.stepIndex-1;i++){
+              console.log(i);
+              console.log(arrtmc[i]);
+              arr2.push(arrtmc[i])
+            }
+          }
+          console.log(arr2);
+          arrtmc=arr2
+          arrtmc.push(obj);
+          that.mocbb = JSON.stringify(arrtmc)
+          that.stepIndex++;
+          that.graph.read(that.dataNew);
+          let tf = that.graph.find(that.walletId);
+          console.log(tf);
+          let ufc = that.graph.getDomPoint({
+            x: tf.model.x,
+            y: tf.model.y
+          });
+          console.log(ufc);
+          that.graph.translate(that.domX-ufc.x,that.domY-ufc.y);
+          console.log(that.stepGroups);
+        },
+        //收起来源
+        hideCome(){
+          let that = this;
+          that.zoomNum = that.graph.getZoom();
+          console.log(that.zoomNum);
+          console.log(that.graph.getNodes());
+          let arr = [];
+          that.graph.getNodes().forEach(value => {
+            if(value.model.backVertexIds != undefined){
+              if(value.model.backVertexIds.indexOf(that.walletId) != -1){
+                if(value.id != that.walletId){
+                  console.log(value);
+                  arr.push(value.id);
+                }
+              }
+            }
+          })
+          console.log(arr);
+          let indexArr = [];
+          let edgeArr = [];
+
+          arr.map(val=>{
+            // that.graph.remove(val)
+            that.dataNew.nodes.map((val2,index)=>{
+              if(val2.id == val){
+                indexArr.push(val2);
+              }
+            })
+            that.dataNew.edges.map((val3,index)=>{
+              if(val3.fromWalletId == val){
+                edgeArr.push(val3);
+              }
+            })
+          })
+
+          console.log(indexArr);
+          indexArr.forEach(val=>{
+            console.log(that.dataNew.nodes.indexOf(val));
+            that.dataNew.nodes.splice(that.dataNew.nodes.indexOf(val),1);
+          })
+          console.log(edgeArr);
+          edgeArr.forEach(val=>{
+            that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+          })
+          console.log(that.dataNew.nodes);
+          console.log(that.dataNew.edges);
+          $('.hide-cc').css('display','none');
+          $('.hideS').css('display',"none")
+          $('.utg').css('display','flex');
+          that.sorArr.splice(that.sorArr.indexOf(that.walletId),1);
+          let  ar1 = [];
+          let  ar2 = [];
+          if(that.tarArr.length > 0){
+            ar1 = JSON.parse(JSON.stringify(that.tarArr)).pop();
+          }else {
+            ar1 = that.tarArr;
+          }
+          if(that.sorArr.length > 0){
+            ar2 = JSON.parse(JSON.stringify(that.sorArr)).pop();;
+          }else {
+            ar2 = that.sorArr;
+          }
+          let obj = {
+            value:JSON.parse(JSON.stringify(that.dataNew)),
+            to:JSON.parse(JSON.stringify(that.tarArr)),
+            sor:JSON.parse(JSON.stringify(that.sorArr)),
+          }
+          arrtmc = JSON.parse(that.mocbb)
+          console.log(arrtmc);
+          console.log(that.mocbb);
+          let arr2 = [];
+          if(arrtmc.length > 0){
+            for(let i =0;i<=that.stepIndex-1;i++){
+              console.log(i);
+              console.log(arrtmc[i]);
+              arr2.push(arrtmc[i])
+            }
+          }
+          console.log(arr2);
+          arrtmc=arr2
+          arrtmc.push(obj);
+          that.mocbb = JSON.stringify(arrtmc)
+          that.stepIndex++;
+          console.log(that.stepGroups);
+          that.graph.read(that.dataNew);
+          let tf = that.graph.find(that.walletId);
+          console.log(tf);
+          let ufc = that.graph.getDomPoint({
+            x: tf.model.x,
+            y: tf.model.y
+          });
+          console.log(ufc);
+          that.graph.translate(that.domX-ufc.x,that.domY-ufc.y);
+        },
+        //删除节点
+        deleteNode(){
+          let that = this;
+          that.zoomNum = that.graph.getZoom();
+          console.log(that.zoomNum);
+          console.log(that.graph.getNodes());
+          let arr = [];
+          that.graph.getNodes().forEach(value => {
+            console.log(value.model.backVertexIds);
+            console.log(that.walletId);
+            if(value.model.backVertexIds != undefined && value.model.backVertexIds != ''){
+              if(value.model.backVertexIds.indexOf(that.walletId) != -1 || value.id == that.walletId){
+                  console.log(value);
+                  arr.push(value.id);
+              }
+            }
+          })
+          console.log(arr);
+          let indexArr = [];
+          let edgeArr = [];
+
+          arr.map(val=>{
+            // that.graph.remove(val)
+            that.dataNew.nodes.map((val2,index)=>{
+              if(val2.id == val){
+                indexArr.push(val2);
+              }
+            })
+            that.dataNew.edges.map((val3,index)=>{
+              if(val3.fromWalletId == val){
+                edgeArr.push(val3);
+              }
+            })
+          })
+
+          // console.log(indexArr);
+          // console.log(edgeArr);
+          indexArr.forEach(val=>{
+            console.log(that.dataNew.nodes.indexOf(val));
+            that.dataNew.nodes.splice(that.dataNew.nodes.indexOf(val),1);
+          })
+          console.log(edgeArr);
+          edgeArr.forEach(val=>{
+            that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+            // console.log(that.dataNew.edges);
+          })
+          // console.log(that.dataNew.nodes);
+          // console.log(that.dataNew.edges);
+          $('.hide-cc').css('display','none');
+          $('.hideS').css('display',"none")
+          $('.utg').css('display','flex');
+          that.sorArr.splice(that.sorArr.indexOf(that.walletId),1);
+          let  ar1 = [];
+          let  ar2 = [];
+          if(that.tarArr.length > 0){
+            ar1 = JSON.parse(JSON.stringify(that.tarArr)).pop();
+          }else {
+            ar1 = that.tarArr;
+          }
+          if(that.sorArr.length > 0){
+            ar2 = JSON.parse(JSON.stringify(that.sorArr)).pop();;
+          }else {
+            ar2 = that.sorArr;
+          }
+          let obj = {
+            value:JSON.parse(JSON.stringify(that.dataNew)),
+            to:JSON.parse(JSON.stringify(that.tarArr)),
+            sor:JSON.parse(JSON.stringify(that.sorArr)),
+          }
+          arrtmc = JSON.parse(that.mocbb)
+          console.log(arrtmc);
+          console.log(that.mocbb);
+          let arr21 = [];
+          if(arrtmc.length > 0){
+            for(let i =0;i<=that.stepIndex-1;i++){
+              console.log(i);
+              console.log(arrtmc[i]);
+              arr21.push(arrtmc[i])
+            }
+          }
+          console.log(arr21);
+          arrtmc=arr21
+          arrtmc.push(obj);
+          that.mocbb = JSON.stringify(arrtmc)
+          that.stepIndex++;
+          // console.log(that.stepGroups);
+
+          //////////////
+          // console.log(that.graph.getNodes());
+          let arr2 = [];
+          that.graph.getNodes().forEach(value => {
+            if(value.model.preVertexIds != undefined && value.model.preVertexIds != ""){
+              if(value.model.preVertexIds.indexOf(that.walletId) != -1 || value.id == that.walletId){
+                  console.log(value);
+                  arr2.push(value.id);
+              }
+            }
+          })
+          // console.log(arr2);
+          let indexArr2 = [];
+          let edgeArr2 = [];
+          arr2.map(val=>{
+            // that.graph.remove(val)
+            that.dataNew.nodes.map((val2,index)=>{
+              if(val2.id == val){
+                indexArr2.push(val);
+              }
+            })
+            that.dataNew.edges.map((val3,index)=>{
+              if(val3.toWalletId == val){
+                edgeArr2.push(val3);
+              }
+            })
+          })
+          // console.log(indexArr);
+          indexArr2.forEach(val=>{
+            that.dataNew.nodes.splice(that.dataNew.nodes.indexOf(val),1);
+          })
+
+          // let edgeArr2 = [];
+          // that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+          // arr.forEach(val=>{
+          //   that.dataNew.edges.forEach((val2,index)=>{
+          //     if(val2.toWalletId != that.walletId){
+          //       edgeArr.push(val);
+          //     }
+          //   })
+          // })
+          console.log(edgeArr2);
+          // arr2.forEach(val=>{
+          //   that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+          // })
+          edgeArr2.forEach(val=>{
+            that.dataNew.edges.splice(that.dataNew.edges.indexOf(val),1);
+            console.log(that.dataNew.edges);
+          })
+          console.log(that.dataNew.nodes);
+          console.log(that.dataNew.edges);
+          $('.hide-cc').css('display','none');
+          $('.hideGo').css('display',"none")
+          $('.utg').css('display','flex');
+          that.tarArr.splice(that.tarArr.indexOf(that.walletId),1);
+          // let obj = {
+          //   edge:that.dataNew.edges,
+          //   vertex:that.dataNew.nodes
+          // }
+          // console.log(obj);
+          // that.modifyData2(obj);
+          that.graph.read(that.dataNew);
+          console.log(that.stepGroups);
+          // that.graph.read(that.dataNew);
+        },
+        //上一步
+        upStep(){
+          let that = this;
+          that.zoomNum = that.graph.getZoom();
+          console.log(that.zoomNum);
+          console.log(that.stepIndex);
+          console.log(arrtmc);
+          if(that.stepIndex >=2){
+            that.stepIndex--;
+            console.log(arrtmc[that.stepIndex]);
+            that.tarArr = arrtmc[that.stepIndex-1].to;
+            that.sorArr = arrtmc[that.stepIndex-1].sor;
+            that.dataNew = arrtmc[that.stepIndex-1].value;
+            that.graph.read(arrtmc[that.stepIndex-1].value);
+            that.graph.zoom(that.zoomNum);
+            console.log(arrtmc[that.stepIndex].sor);
+            console.log(that.tarArr);
+            console.log(that.sorArr);
+            console.log(that.stepIndex);
+            console.log(arrtmc);
+            console.log(arrtmc[that.stepIndex - 1].value);
+            that.mocbb = JSON.stringify(arrtmc)
+          }else {
+            that.stepIndex = 1;
+            return false;
+          }
+        },
+        //
+        saveImage(imgdate,filename){
+          // let idt = $("#mountNode").find("canvas").attr('id');
+          // console.log(idt);
+          // var canvas = document.getElementById(idt);
+          // $('#'+idt).css('background','black')
+          // var context = canvas.getContext("2d");
+          // function dataURLtoFile(dataurl, filename = 'file') {
+          //   let arr = dataurl.split(',')
+          //   let mime = arr[0].match(/:(.*?);/)[1]
+          //   let suffix = mime.split('/')[1]
+          //   let bstr = atob(arr[1])
+          //   let n = bstr.length
+          //   let u8arr = new Uint8Array(n)
+          //   while (n--) {47
+          //     u8arr[n] = bstr.charCodeAt(n)
+          //   }
+          //   return new File([u8arr], `${filename}.${suffix}`, {
+          //     type: mime
+          //   })
+          // }
+          // var base64Img = 'data:image/bmp;base64,LASDJFLKAJDFLKASDJFL...' // base64编码的图片
+          // var imgFile = dataURLtoFile(canvas.toDataURL("image/png"));
+          // let evt = document.createEvent("HTMLEvents");
+          // evt.initEvent("click", true, true); //initEvent 不加后两个参数在FF下会报错  事件类型，是否冒泡，是否阻止浏览器的默认行为
+          // let aLink = document.createElement('a');
+          // aLink.download = 'qwe';
+          // aLink.href = URL.createObjectURL(imgFile);
+          // aLink.click();
+          // console.log(imgFile);
+          let idt = $("#mountNode").find("canvas").attr('id');
+          console.log(idt);
+          var canvas = document.getElementById(idt);
+          function saveAsPNG(canvas) {
+            return canvas.toDataURL("image/png");
+          }
+          function downLoad(url){
+            var oA = document.createElement("a");
+            oA.download = '';// 设置下载的文件名，默认是'下载'
+            oA.href = url;
+            document.body.appendChild(oA);
+            oA.click();
+            oA.remove(); // 下载之后把创建的元素删除
+          }
+          downLoad(saveAsPNG(canvas));
+        },
+        downStep(){
+          let that = this;
+          that.zoomNum = that.graph.getZoom();
+          console.log(that.zoomNum);
+          console.log(that.stepIndex);
+          console.log(arrtmc);
+          if(that.stepIndex >=1 && that.stepIndex < arrtmc.length){
+            that.stepIndex++;
+            console.log(arrtmc[that.stepIndex]);
+            that.tarArr = arrtmc[that.stepIndex-1].to;
+            that.sorArr = arrtmc[that.stepIndex-1].sor;
+            that.dataNew = arrtmc[that.stepIndex-1].value;
+            that.graph.read(arrtmc[that.stepIndex-1].value);
+            that.graph.zoom(that.zoomNum);
+            console.log(arrtmc[that.stepIndex].sor);
+            console.log(that.tarArr);
+            console.log(that.sorArr);
+            console.log(that.stepIndex);
+            console.log(arrtmc);
+            console.log(arrtmc[that.stepIndex - 1].value);
+            that.mocbb = JSON.stringify(arrtmc)
+          }else {
+            that.stepIndex = arrtmc.length;
+            return false;
+          }
         }
+
       },
       mounted(){
         let that = this;
@@ -939,7 +1571,7 @@
   left: 0;
   display: none;
   padding: 7px 0;
-  height: 92px;
+  height: 137px;
 }
 .hide-cc div{
   width: 100%;
@@ -959,6 +1591,7 @@
 }
 .hideGo{
   cursor: pointer;
+  border-bottom: 1px solid #1A1C20;
 
 }
   .hide-cc div:hover{

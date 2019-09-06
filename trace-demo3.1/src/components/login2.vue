@@ -67,9 +67,8 @@
               <input class="inputText" type="text" placeholder="姓名" v-model="sqName" autocomplete="off">
             </div>
             <div class="input" style="margin-top: 14px">
-              <input class="inputText" type="text" placeholder="手机" v-model="sqTel" autocomplete="off">
+              <input class="inputText" type="text" placeholder="电话" v-model="sqTel" autocomplete="off">
             </div>
-            <span style="background: #fff;font-size: 12px;margin-top: 0.25rem">*请务必填写可接收短信验证码的手机号</span>
             <div class="input" style="margin-top: 14px">
               <input class="inputText" type="text" placeholder="邮箱" v-model="email" autocomplete="off">
             </div>
@@ -114,179 +113,199 @@
   import './../../static/js/jigsaw.min'
   import city from './../../static/city'
   export default {
-    name: "login2",
-    data(){
-      return {
-        loginStep:1,
-        userName:'',
-        passWord:'',
-        code:'',
-        codeSend:true,
-        codeland:false,
-        codeRe:false,
-        num:60,
-        timer:null,
-        radio2:0,
-        options:CityInfo,
-        selectedOptions: [],
-        sqName:"",
-        sqTel:"",
-        sqNumber:"",
-        sqPeople:"",
-        minShow:true,
+      name: "login2",
+      data(){
+        return {
+          loginStep:1,
+          userName:'',
+          passWord:'',
+          code:'',
+          codeSend:true,
+          codeland:false,
+          codeRe:false,
+          num:60,
+          timer:null,
+          radio2:0,
+          options:CityInfo,
+          selectedOptions: [],
+          sqName:"",
+          sqTel:"",
+          sqNumber:"",
+          sqPeople:"",
+          minShow:true,
 
-        part:"",
-        addressT:"",
-        email:""
-      }
-    },
-    methods:{
-      //开始勾画图形验证码
-      startChart(){
-        let that = this;
-        jigsaw.init({
-          el: document.getElementById('captcha'),
-          onSuccess: function() {
-            that.loginStep = 3;
-          },
-          onFail: cleanMsg,
-          onRefresh: cleanMsg
-        })
-        that.minShow = true;
-        function cleanMsg() {
-          document.getElementById('msg').innerHTML = ''
+          part:"",
+          addressT:"",
+          email:""
         }
       },
-      //登录名密码提交
-      starLogin(){
-        let that=  this;
-        let data = {
-          name:that.userName,
-          password:that.$md5('chaindigg'+that.$md5(that.passWord))
-        }
-        if(that.userName != "" && that.passWord != ""){
-          that.minShow = false;
-          that.ajax({
-            method:"post",
-            url:that.Config.baseUrl+"/login",
-            data:that.qs.stringify(data)
-          }).then(res =>{
-            if(res.data.code == "0000"){
-              //提交成功后开启图形验证码
-              that.Cookies.set("username",that.userName);
-              // that.Cookies.set("password",that.password);
-              that.Cookies.set("token",res.data.data["token"]);
-              that.Cookies.set("cl",res.data.data["level"]);
-              that.loginStep = 2;
-              that.startChart();
-            }else {
-              that.$message.error("用户名或密码错误");
-              that.minShow = true;
-            }
-          }).catch(res=>{
-            that.minShow = true;
+      methods:{
+        startChart(){
+          let that = this;
+          jigsaw.init({
+            el: document.getElementById('captcha'),
+            onSuccess: function() {
+              that.loginStep = 3;
+            },
+            onFail: cleanMsg,
+            onRefresh: cleanMsg
           })
-        }
-      },
-      //发送验证码
-      //
-      numT(){
-        let that = this;
-        that.num--;
-        if(that.num <= 0){
-          //验证码60s倒计时
-          that.num = 60;
-          clearInterval(that.timer);
+          that.minShow = true;
+          function cleanMsg() {
+            document.getElementById('msg').innerHTML = ''
+          }
+        },
+        starLogin(){
+          let that=  this;
+          let data = {
+            name:that.userName,
+            password:that.$md5('chaindigg'+that.$md5(that.passWord))
+          }
+          if(that.userName != "" && that.passWord != ""){
+            that.minShow = false;
+            that.ajax({
+              method:"post",
+              url:that.Config.baseUrl+"/login",
+              data:that.qs.stringify(data)
+            }).then(res =>{
+              if(res.data.code == "0000"){
+                that.Cookies.set("username",that.userName);
+                // that.Cookies.set("password",that.password);
+                that.Cookies.set("token",res.data.data["token"]);
+                that.Cookies.set("cl",res.data.data["level"]);
+                that.loginStep = 2;
+                that.startChart();
+              }else {
+                that.$message.error("用户名或密码错误");
+                that.minShow = true;
+              }
+            }).catch(res=>{
+              that.minShow = true;
+            })
+          }
+        },
+        //发送验证码
+        //
+        numT(){
+          let that = this;
+          that.num--;
+          if(that.num <= 0){
+            that.num = 60;
+            clearInterval(that.timer);
+            that.codeSend = false;
+            that.codeland = false;
+            that.codeRe = true;
+          }
+        },
+        sendCodeS(){
+          let that = this;
           that.codeSend = false;
-          that.codeland = false;
-          that.codeRe = true;
-        }
-      },
-      sendCodeS(){
-        //点击发送验证码
-        let that = this;
-        that.codeSend = false;
-        that.codeland = true;
-        that.codeRe = false;
-        that.sendCode();
-        that.timer = setInterval(that.numT,1000)
-      },
-      //提交发送验证码请求
-      sendCode(){
-        let that = this;
-        that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
-        that.ajax({
-          method:'get',
-          url:that.Config.baseUrl2+"/member/sms",
-          params:{
-            randNum:Math.random() * (100000000 - 0) + 0
-          }
-        }).then(res=>{
-          if(res.data.code == '0000'){
-            // that.$message.success("验证码发送成功")
-          }
-        })
-      },
-      //校验验证码
-      checkCode(){
-        let that = this;
-        if(that.code != ''){
+          that.codeland = true;
+          that.codeRe = false;
+          that.sendCode();
+          that.timer = setInterval(that.numT,1000)
+        },
+        sendCode(){
+          let that = this;
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method:'get',
-            url:that.Config.baseUrl2+"/member/sms/check",
+            url:that.Config.baseUrl2+"/member/sms",
             params:{
-              code:that.code
+              randNum:Math.random() * (100000000 - 0) + 0
             }
           }).then(res=>{
-            console.log(res);
             if(res.data.code == '0000'){
-              that.Cookies.set("token",res.data.data);
-              that.$router.push({name:"search"})
-            }else {
-              that.$message.error(res.data.message)
+              // that.$message.success("验证码发送成功")
             }
           })
-        }else {
+        },
+        //校验验证码
+        checkCode(){
+          let that = this;
+          if(that.code != ''){
+            that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
+            that.ajax({
+              method:'get',
+              url:that.Config.baseUrl2+"/member/sms/check",
+              params:{
+                code:that.code
+              }
+            }).then(res=>{
+              console.log(res);
+              if(res.data.code == '0000'){
+                that.Cookies.set("token",res.data.data);
+                that.$router.push({name:"search"})
+              }else {
+                that.$message.error(res.data.message)
+              }
+            })
+          }else {
 
-        }
-      },
-      //点击公安局备案
-      linkClick(){
-        window.open('http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802028427')
-      },
-      handleChange(value) {
-        console.log(value);
-      },
-      //点击返回登录
-      backLogin(){
-        let that = this;
-        that.loginStep = 1;
-        that.selectedOptions = [];
-        that.sqName = "";
-        that.sqTel = "";
-        that.sqNumber = "";
-        that.sqPeople = "";
-        that.radio2 = 0;
-        that.addressT = "";
-        that.part = "";
-        that.email = "";
-      },
-      //申请试用提交
-      qrClick(){
-        let that = this;
-        console.log(that.radio2);
-        if(that.addressT == "" || that.sqName == "" || that.sqTel == "" || that.sqNumber == "" || that.radio2 == 0 || that.email == ""){
-          that.$message.error('请将信息填写完整')
-        }else {
-          let department = '';
+          }
+        },
+        linkClick(){
+          window.open('http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802028427')
+        },
+        handleChange(value) {
+          console.log(value);
+        },
+        backLogin(){
+          let that = this;
+          that.loginStep = 1;
+          that.selectedOptions = [];
+          that.sqName = "";
+          that.sqTel = "";
+          that.sqNumber = "";
+          that.sqPeople = "";
+          that.radio2 = 0;
+          that.addressT = "";
+          that.part = "";
+          that.email = "";
+        },
+        qrClick(){
+          let that = this;
+          console.log(that.radio2);
+          if(that.addressT == "" || that.sqName == "" || that.sqTel == "" || that.sqNumber == "" || that.radio2 == 0){
+            that.$message.error('请将信息填写完整')
+          }else {
+            let department = '';
 
-          if(that.radio2 == 3){
-            if(that.part == ""){
-              that.$message.error('请将信息填写完整')
+            if(that.radio2 == 3){
+              if(that.part == ""){
+                that.$message.error('请将信息填写完整')
+              }else {
+                department = that.part;
+                console.log(that.email);
+                let data = {
+                  name:that.sqName,
+                  contactWay:that.sqTel,
+                  workNo:that.sqNumber,
+                  department:department,
+                  area:that.addressT,
+                  referrer:that.sqPeople,
+                  email:that.email
+                }
+                that.ajax({
+                  method:'post',
+                  url:that.Config.baseUrl2+"/member/apply",
+                  data:that.qs.stringify(data)
+                }).then(res=>{
+                  if(res.data.code == '0000'){
+                    that.open();
+                  }
+                })
+              }
             }else {
-              department = that.part;
-              console.log(that.email);
+              if(that.radio2 == 1){
+                department = '网安'
+              }else if(that.radio2 == 2){
+                department = '司法'
+              }else if(that.radio2 == 4){
+                department = '经侦'
+              }else if(that.radio2 == 5){
+                department = '刑侦'
+              }
               let data = {
                 name:that.sqName,
                 contactWay:that.sqTel,
@@ -306,63 +325,34 @@
                 }
               })
             }
-          }else {
-            if(that.radio2 == 1){
-              department = '网安'
-            }else if(that.radio2 == 2){
-              department = '司法'
-            }else if(that.radio2 == 4){
-              department = '经侦'
-            }else if(that.radio2 == 5){
-              department = '刑侦'
-            }
-            let data = {
-              name:that.sqName,
-              contactWay:that.sqTel,
-              workNo:that.sqNumber,
-              department:department,
-              area:that.addressT,
-              referrer:that.sqPeople,
-              email:that.email
-            }
-            that.ajax({
-              method:'post',
-              url:that.Config.baseUrl2+"/member/apply",
-              data:that.qs.stringify(data)
-            }).then(res=>{
-              if(res.data.code == '0000'){
-                that.open();
-              }
-            })
-          }
 
+          }
+        },
+        sqClick(){
+          let that = this;
+          that.loginStep = 4;
+          that.radio2 = 0;
+        },
+        open() {
+          let that = this;
+          this.$alert('我们将在1个工作日内与您联系，请您耐心等待', '提交成功', {
+            confirmButtonText: '确定',
+            callback: action => {
+              that.backLogin();
+            }
+          });
         }
       },
-      sqClick(){
-        let that = this;
-        that.loginStep = 4;
-        that.radio2 = 0;
-      },
-      open() {
-        let that = this;
-        this.$alert('我们将在1个工作日内与您联系，请您耐心等待', '提交成功', {
-          confirmButtonText: '确定',
-          callback: action => {
-            that.backLogin();
-          }
+      mounted(){
+        $(".login").width(document.documentElement.clientWidth);
+        $(".login").height(document.documentElement.clientHeight);
+        window.addEventListener("resize", () => {
+          $(".login").css('width',$(window).width() + 'px');
+          $(".login").css('height',$(window).height()+ 'px');
+          // $("#chart").css('height',$(window).height()-113 +'px');
         });
       }
-    },
-    mounted(){
-      $(".login").width(document.documentElement.clientWidth);
-      $(".login").height(document.documentElement.clientHeight);
-      window.addEventListener("resize", () => {
-        $(".login").css('width',$(window).width() + 'px');
-        $(".login").css('height',$(window).height()+ 'px');
-        // $("#chart").css('height',$(window).height()-113 +'px');
-      });
     }
-  }
 </script>
 
 <style scoped>

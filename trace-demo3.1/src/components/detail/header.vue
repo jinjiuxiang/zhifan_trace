@@ -110,7 +110,6 @@
           let that = this;
           that.rightHide = !that.rightHide;
         },
-        //修改密码w
         changePwd($event){
           // $($event.currentTarget).addClass('click').siblings().removeClass('click');
           this.rightHide = false;

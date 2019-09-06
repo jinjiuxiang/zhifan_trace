@@ -23,82 +23,67 @@
         }
       },
       methods:{
-        //钱包显示
         walSH(){
           console.log('111')
 
           this.walShow = true;
         },
-        //钱包隐藏
         walH(){
           this.walShow = false;
         },
-        //交易显示
         txnS(){
           this.txnShow = true;
+          // $('.traceMin').animate({minHeight:'320px'},3500);
         },
-        //交易隐藏
         txnH(){
           this.txnShow = false;
         },
-        //开始搜索
         getSearch(key){
           this.$refs.traceMin.getSearch();
           this.walH();
           this.txnH();
         },
-        //点击查看钱包信息
         walletClick(id){
           console.log(id);
           this.$refs.walletVue.walletClick(id);
         },
-        //点击参看额度信息
         recordClick(id){
           console.log(id);
           this.$refs.txnRecord.recordClick(id)
         },
-        //点击链接
         linkClick(str){
           console.log(str);
           this.$refs.txnRecord.linkClick(str)
 
         },
-        //关闭全部
         closeAll(){
           this.$refs.txnRecord.closeAll();
           this.$refs.walletVue.closeAll();
           $('.mc').removeClass("umm");
           this.$message.closeAll()
         },
-        //点击点
         tNode(){
           this.$refs.txnRecord.tNode();
         },
-        //点击线
         tLine(){
           this.$refs.txnRecord.tLine();
         },
-        //开始切换
         getTag(){
           this.$refs.traceMin.getTag();
         },
-        //保存图谱
         stavePhoto(){
           let that = this;
           that.$emit('stavePhoto');
         },
-        //开始存储
         getSave(key){
           let that = this;
           console.log(key);
           that.$refs.traceMin.getSave(key);
         },
-        //成功
         successClick(){
           let that = this;
           that.$emit('successClick')
         },
-        //失败
         failClick(message){
           let that = this;
           that.$emit('failClick',message)

@@ -352,7 +352,6 @@
             })
 
           },
-          //修改密码
           changePwdClick(){
             let that = this;
             let reg = /^(?=.*\d)(?=.*[a-z])[a-zA-Z0-9]{8,20}$/;
@@ -417,18 +416,15 @@
               })
             }
           },
-          //修改密码显示隐藏
           changePwd($event){
             // $($event.currentTarget).addClass('click').siblings().removeClass('click');
             this.rightHide = false;
             this.changePwd2 = true;
           },
-          //点击用户名
           userClick(){
             let that = this;
             that.rightHide = !that.rightHide;
           },
-          //点击取消
           cancelClick(){
             let that = this;
             that.oldPwd = '';
@@ -445,7 +441,6 @@
             $('.pwdInput').eq(1).css('borderColor','#C8C8C8')
             $('.pwdInput').eq(2).css('borderColor','#C8C8C8')
           },
-          //点击hash
           hashClick(addr){
             let that = this;
             that.checkKey(addr)
@@ -470,7 +465,6 @@
           },
 
           //////////
-          //新旧密码核实
           oldPwdCheck(){
             let that = this;
             console.log(that.oldPwd);
@@ -482,13 +476,11 @@
               $('.pwdInput').eq(0).css('borderColor','#C8C8C8')
             }
           },
-          //新旧密码核实
           oldPwdCheck2(){
             let that = this;
             that.tS1 = false;
             $('.pwdInput').eq(0).css('borderColor','#C8C8C8')
           },
-          //新密码核实
           newPwdCheck(){
             let that = this;
             let reg = /^(?=.*\d)(?=.*[a-z])[a-zA-Z0-9]{8,20}$/;
@@ -522,7 +514,6 @@
             that.tS6 = false;
             $('.pwdInput').eq(1).css('borderColor','#C8C8C8')
           },
-          //密码核实
           checkPwdCheck(){
             let that = this;
             let reg = /^(?=.*\d)(?=.*[a-z])[a-zA-Z0-9]{8,20}$/;

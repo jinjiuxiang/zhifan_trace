@@ -23,48 +23,39 @@
         }
       },
       methods:{
-        //钱包信息显示
         walSH(){
           console.log('111')
 
           this.walShow = true;
         },
-        //钱包信息隐藏
         walH(){
           this.walShow = false;
         },
-        //交易信息显示
         txnS(){
           this.txnShow = true;
           // $('.traceMin').animate({minHeight:'320px'},3500);
         },
-        //交易信息隐藏
         txnH(){
           this.txnShow = false;
         },
-        //开始搜索
         getSearch(key){
           this.$refs.traceMin.getSearch();
           this.walH();
           this.txnH();
         },
-        //点击钱包信息
         walletClick(id){
           console.log(id);
           this.$refs.walletVue.walletClick(id);
         },
-        //点击额度
         recordClick(id){
           console.log(id);
           this.$refs.txnRecord.recordClick(id)
         },
-        //点击链接
         linkClick(str){
           console.log(str);
           this.$refs.txnRecord.linkClick(str)
 
         },
-        //关闭全部
         closeAll(){
           this.$refs.txnRecord.closeAll();
           this.$refs.walletVue.closeAll();

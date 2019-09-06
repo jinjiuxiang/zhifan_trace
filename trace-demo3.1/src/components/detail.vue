@@ -154,28 +154,23 @@
           that.$refs.trace.getSearch(key);
           console.log(key)
         },
-        //点击返回
         returnBack(){
           let that = this;
           that.tabShow = 1;
           $('.utf').addClass('tabSel');
           $('.utf').siblings().removeClass('tabSel');
         },
-        //关闭全部
         closeAll(){
           this.$refs.headerVue.xClick()
         },
-        //点击钱包
         walletClick(id){
           this.$refs.trace.walSH()
           this.$refs.trace.walletClick(id)
         },
-        //修改密码显示
         changePwdShow(){
           let that = this;
           that.changePwd = true;
         },
-        //修改密码点击
         changePwdClick(){
           let that = this;
           let reg = /^(?=.*\d)(?=.*[a-z])[a-zA-Z0-9]{8,20}$/;
@@ -240,7 +235,6 @@
             })
           }
         },
-        //点击取消
         cancelClick(){
           let that = this;
           that.oldPwd = '';
@@ -257,7 +251,6 @@
           $('.pwdInput').eq(1).css('borderColor','#C8C8C8')
           $('.pwdInput').eq(2).css('borderColor','#C8C8C8')
         },
-        //确认点击
         trueClick(){
           let that = this;
           console.log(that.chartName);
@@ -325,24 +318,20 @@
 
           }
         },
-        //保存图片
         stavePhoto(){
           let that = this;
           that.saveHide = true;
           that.chartName = '';
         },
-        //保存图片2
         stavePhoto2(){
           let that = this;
           that.saveHide2 = true;
           that.chartName2 = '';
         },
-        //成功点击
         successClick(){
           let that = this;
           that.$message.success('保存成功')
         },
-        //失败点击
         failClick(message){
           let that = this;
           that.open(message)
@@ -361,7 +350,6 @@
           });
         },
         //////////
-        //新旧密码校验
         oldPwdCheck(){
           let that = this;
           console.log(that.oldPwd);
@@ -373,13 +361,11 @@
             $('.pwdInput').eq(0).css('borderColor','#C8C8C8')
           }
         },
-        //新旧密码校验
         oldPwdCheck2(){
           let that = this;
           that.tS1 = false;
           $('.pwdInput').eq(0).css('borderColor','#C8C8C8')
         },
-        //新旧密码校验
         newPwdCheck(){
           let that = this;
           let reg = /^(?=.*\d)(?=.*[a-z])[a-zA-Z0-9]{8,20}$/;
@@ -406,7 +392,6 @@
             }
           }
         },
-        //新旧密码校验
         newPwdCheck2(){
           let that = this;
           that.tS3 = false;
@@ -414,7 +399,6 @@
           that.tS6 = false;
           $('.pwdInput').eq(1).css('borderColor','#C8C8C8')
         },
-        //密码最终确认
         checkPwdCheck(){
           let that = this;
           let reg = /^(?=.*\d)(?=.*[a-z])[a-zA-Z0-9]{8,20}$/;
