@@ -5,8 +5,23 @@ Vue.use(Router)
 
 export default new Router({
   mode:"history",
-  base:"/v4/",
+  base:"/v3/",
   routes: [
+    {
+      path: '/HelloWorld',
+      name: 'HelloWorld',
+      component:resolve => require(['@/components/HelloWorld'],resolve)
+    },
+    {
+      path: '/index',
+      name: 'index',
+      component:resolve => require(['@/components/index'],resolve)
+    },
+    {
+      path: '/index',
+      name: 'index2',
+      component:resolve => require(['@/components/index2'],resolve)
+    },
     {
       path: '/',
       name: 'login',
@@ -21,6 +36,21 @@ export default new Router({
       path: '/detail',
       name: 'detail',
       component:resolve => require(['@/components/detail'],resolve)
+    },
+    {
+      path: '/newty',
+      name: 'newty',
+      component:resolve => require(['@/components/newWay'],resolve)
+    },
+    {
+      path: '/newT',
+      name: 'newT',
+      component:resolve => require(['@/components/newT'],resolve)
+    },
+    {
+      path: '/antV',
+      name: 'antV',
+      component:resolve => require(['@/components/antV'],resolve)
     },
   ]
 })

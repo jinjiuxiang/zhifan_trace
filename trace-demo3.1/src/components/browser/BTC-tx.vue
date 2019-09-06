@@ -457,7 +457,6 @@
     font-size: 0.875rem;
     align-items: center;
     background: #24262C;
-    margin-bottom: 3rem;
   }
   .input div,.inputInfo div{
     flex: 1;

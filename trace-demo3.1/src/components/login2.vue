@@ -26,42 +26,79 @@
               <input class="inputText" type="password" v-model="passWord">
             </div>
             <span class="forGet1">
-              <el-tooltip class="item" effect="dark" content="请联系Chaindigg重置密码，联系电话：13120302630" placement="top-end">
+              <el-tooltip class="item" effect="dark" content="请联系Chaindigg重置密码，联系电话：400-6988-698" placement="top-end">
                 <span>忘记密码？</span>
               </el-tooltip>
             </span>
             <div class="login1" @click="starLogin" v-show="minShow">登录</div>
             <div class="login1" v-show="!minShow">登录</div>
             <span class="register1">
+              没有账号？点击<span @click="sqClick">申请试用</span>
             </span>
-            <!--添加提醒弹窗-->
-            <div class="alWin" v-show="alertShow">
-              <span class="alwin1"><img src="./../assets/img/error.png" alt="" @click="alerHide"></span>
-              <span class="alwin2"><img src="./../assets/img/tishi.png" alt="">&nbsp;用户名密码错误</span>
-            </div>
           </div>
-          <!---->
-          <!--修改密码-->
-          <div class="right1" v-show="loginStep==2">
-            <span class="label">修改密码</span>
-            <span class="xt1"><img src="./../assets/img/tishi.png" alt="">&nbsp;首次登录请修改密码</span>
-            <div class="input2" style="background: #ffffff">
-              <input class="inputText2" type="password" v-model="newPwd" placeholder="新密码 (8~16位)">
+          <!--图形验证码-->
+          <div class="right2" v-show="loginStep==2">
+            <div id="captcha"></div>
+            <div id="msg"></div>
+          </div>
+          <!--手机验证码-->
+          <div class="right3" v-show="loginStep==3">
+            <span class="label">手机验证</span>
+            <div class="mobMin">
+              <input type="text" class="mobNumber" v-model="code" @keyup.enter="checkCode">
+              <span class="code" @click="sendCodeS" v-show="codeSend">发送验证码</span>
+              <span class="code" style="background: #8E8E93 "  v-show="codeland">已发送({{num}})</span>
+              <span class="code" @click="sendCodeS" v-show="codeRe">重新发送</span>
             </div>
-            <span class="pwdS" v-show="pwdSShow1">密码需要8～16位</span>
-            <div class="input2" style="background: #ffffff">
-              <input class="inputText2" type="password" v-model="newPwd2" placeholder="确认新密码 (8~16位)">
-            </div>
-            <span class="pwdS" v-show="pwdSShow2">两次密码不一致</span>
-            <div class="login2" @click="changeLogin" v-show="minShow2">登录</div>
-            <div class="login2" v-show="!minShow2">登录</div>
-            <span class="register1">
+            <span class="forGet1">
+              <el-tooltip class="item" effect="dark" content="请联系Chaindigg修改手机号，联系电话：400-6988-698" placement="top-end">
+                 <span>手机号不可用？</span>
+              </el-tooltip>
             </span>
-            <!--添加提醒弹窗-->
-            <div class="alWin" v-show="alertShow">
-              <span class="alwin1"><img src="./../assets/img/error.png" alt="" @click="alerHide"></span>
-              <span class="alwin2"><img src="./../assets/img/tishi.png" alt="">&nbsp;用户名密码错误</span>
+            <div class="login1" @click="checkCode">登录</div>
+          </div>
+          <!--登陆界面-->
+          <div class="right1" v-show="loginStep==4">
+            <span class="register2">
+              <span @click="backLogin">< 返回登录</span>
+            </span>
+            <span class="label" style="margin-top: 12px;margin-bottom: 0rem">申请试用</span>
+            <div class="input" style="margin-top: 14px">
+              <input class="inputText" type="text" placeholder="姓名" v-model="sqName" autocomplete="off">
             </div>
+            <div class="input" style="margin-top: 14px">
+              <input class="inputText" type="text" placeholder="手机" v-model="sqTel" autocomplete="off">
+            </div>
+            <span style="background: #fff;font-size: 12px;margin-top: 0.25rem">*请务必填写可接收短信验证码的手机号</span>
+            <div class="input" style="margin-top: 14px">
+              <input class="inputText" type="text" placeholder="邮箱" v-model="email" autocomplete="off">
+            </div>
+            <div class="input" style="margin-top: 14px">
+              <input class="inputText" type="text" placeholder="警号" v-model="sqNumber" autocomplete="off">
+            </div>
+            <div class="radio" style="margin-top: 14px">
+              <span class="mct">部门：</span>
+              <el-radio-group v-model="radio2">
+                <el-radio :label=1>网安</el-radio>
+                <el-radio :label=4>经侦</el-radio>
+                <el-radio :label=5>刑侦</el-radio>
+                <el-radio :label=2>司法</el-radio>
+              </el-radio-group>
+              <div style="box-sizing: border-box;padding-left: 53px">
+                <el-radio-group v-model="radio2">
+                  <el-radio :label=3>其他</el-radio>
+                </el-radio-group>
+                <input style="margin-left: 1rem" v-show="radio2 == 3" type="text" v-model="part">
+              </div>
+            </div>
+            <div class="input" style="margin-top: 14px">
+              <input class="inputText" type="text" placeholder="地区" v-model="addressT" autocomplete="off">
+            </div>
+            <span style="background: #fff;font-size: 12px;margin-top: 0.25rem">示例： XX省 XX市 XX县</span>
+            <div class="input" style="margin-top: 14px">
+              <input class="inputText" type="text" placeholder="推荐人(选填)" autocomplete="off" v-model="sqPeople">
+            </div>
+            <div class="login2" @click="qrClick">提交</div>
           </div>
         </div>
       </div>
@@ -74,6 +111,8 @@
 </template>
 
 <script>
+  import './../../static/js/jigsaw.min'
+  import city from './../../static/city'
   export default {
     name: "login2",
     data(){
@@ -81,16 +120,43 @@
         loginStep:1,
         userName:'',
         passWord:'',
+        code:'',
+        codeSend:true,
+        codeland:false,
+        codeRe:false,
+        num:60,
+        timer:null,
+        radio2:0,
+        options:CityInfo,
+        selectedOptions: [],
+        sqName:"",
+        sqTel:"",
+        sqNumber:"",
+        sqPeople:"",
         minShow:true,
-        minShow2:true,
-        alertShow:false,
-        newPwd:"",
-        newPwd2:"",
-        pwdSShow1:false,
-        pwdSShow2:false,
+
+        part:"",
+        addressT:"",
+        email:""
       }
     },
     methods:{
+      //开始勾画图形验证码
+      startChart(){
+        let that = this;
+        jigsaw.init({
+          el: document.getElementById('captcha'),
+          onSuccess: function() {
+            that.loginStep = 3;
+          },
+          onFail: cleanMsg,
+          onRefresh: cleanMsg
+        })
+        that.minShow = true;
+        function cleanMsg() {
+          document.getElementById('msg').innerHTML = ''
+        }
+      },
       //登录名密码提交
       starLogin(){
         let that=  this;
@@ -106,16 +172,15 @@
             data:that.qs.stringify(data)
           }).then(res =>{
             if(res.data.code == "0000"){
+              //提交成功后开启图形验证码
               that.Cookies.set("username",that.userName);
+              // that.Cookies.set("password",that.password);
               that.Cookies.set("token",res.data.data["token"]);
               that.Cookies.set("cl",res.data.data["level"]);
-              that.$router.push({name:"search"})
-            }else if(res.data.code == '1012'){
               that.loginStep = 2;
-              that.Cookies.set("username",that.userName);
-              that.Cookies.set("token",res.data.data["token"]);
+              that.startChart();
             }else {
-              that.alertShow = true;
+              that.$message.error("用户名或密码错误");
               that.minShow = true;
             }
           }).catch(res=>{
@@ -123,61 +188,169 @@
           })
         }
       },
-      alerHide(){
-        this.alertShow = false;
+      //发送验证码
+      //
+      numT(){
+        let that = this;
+        that.num--;
+        if(that.num <= 0){
+          //验证码60s倒计时
+          that.num = 60;
+          clearInterval(that.timer);
+          that.codeSend = false;
+          that.codeland = false;
+          that.codeRe = true;
+        }
+      },
+      sendCodeS(){
+        //点击发送验证码
+        let that = this;
+        that.codeSend = false;
+        that.codeland = true;
+        that.codeRe = false;
+        that.sendCode();
+        that.timer = setInterval(that.numT,1000)
+      },
+      //提交发送验证码请求
+      sendCode(){
+        let that = this;
+        that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
+        that.ajax({
+          method:'get',
+          url:that.Config.baseUrl2+"/member/sms",
+          params:{
+            randNum:Math.random() * (100000000 - 0) + 0
+          }
+        }).then(res=>{
+          if(res.data.code == '0000'){
+            // that.$message.success("验证码发送成功")
+          }
+        })
+      },
+      //校验验证码
+      checkCode(){
+        let that = this;
+        if(that.code != ''){
+          that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
+          that.ajax({
+            method:'get',
+            url:that.Config.baseUrl2+"/member/sms/check",
+            params:{
+              code:that.code
+            }
+          }).then(res=>{
+            console.log(res);
+            if(res.data.code == '0000'){
+              that.Cookies.set("token",res.data.data);
+              that.$router.push({name:"search"})
+            }else {
+              that.$message.error(res.data.message)
+            }
+          })
+        }else {
+
+        }
       },
       //点击公安局备案
       linkClick(){
         window.open('http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802028427')
       },
-      //新旧密码错误飙红
-      borderColorRed(){
-        $('.inputText2').css('border','1px solid #E02020')
+      handleChange(value) {
+        console.log(value);
       },
-      //修改密码请求
-      changePwd(){
+      //点击返回登录
+      backLogin(){
         let that = this;
-        that.ajax.defaults.headers.post['token'] = that.Cookies.get("token");
-        let data = {
-          oldPassword:that.$md5('chaindigg'+that.$md5(that.passWord)),
-          newPassword1:that.$md5('chaindigg'+that.$md5(that.newPwd)),
-          newPassword2:that.$md5('chaindigg'+that.$md5(that.newPwd2))
-        }
-        that.ajax({
-          method:"post",
-          url:that.Config.baseUrl2 + "/member/modify",
-          data:that.qs.stringify(data)
-        }).then(res=>{
-          console.log(res);
-          if(res.data.code == "0000"){
-            that.passWord = that.newPwd;
-            that.starLogin();
-          }else {
-            that.$message.error(res.data.message);
-          }
-        }).catch(()=>{
-          that.minShow2 = true;
-        })
+        that.loginStep = 1;
+        that.selectedOptions = [];
+        that.sqName = "";
+        that.sqTel = "";
+        that.sqNumber = "";
+        that.sqPeople = "";
+        that.radio2 = 0;
+        that.addressT = "";
+        that.part = "";
+        that.email = "";
       },
-      //修改密码页面登录
-      changeLogin(){
+      //申请试用提交
+      qrClick(){
         let that = this;
-        if(that.newPwd == '' || that.newPwd2 == ''){
-          return false;
-          that.minShow2 = false;
+        console.log(that.radio2);
+        if(that.addressT == "" || that.sqName == "" || that.sqTel == "" || that.sqNumber == "" || that.radio2 == 0 || that.email == ""){
+          that.$message.error('请将信息填写完整')
         }else {
-          if(that.newPwd.length < 8){
-            that.pwdSShow1 = true;
-            that.pwdSShow2 = false;
-            that.borderColorRed()
-          }else if(that.newPwd != that.newPwd2){
-            that.pwdSShow1 = false;
-            that.pwdSShow2 = true;
-            that.borderColorRed()
+          let department = '';
+
+          if(that.radio2 == 3){
+            if(that.part == ""){
+              that.$message.error('请将信息填写完整')
+            }else {
+              department = that.part;
+              console.log(that.email);
+              let data = {
+                name:that.sqName,
+                contactWay:that.sqTel,
+                workNo:that.sqNumber,
+                department:department,
+                area:that.addressT,
+                referrer:that.sqPeople,
+                email:that.email
+              }
+              that.ajax({
+                method:'post',
+                url:that.Config.baseUrl2+"/member/apply",
+                data:that.qs.stringify(data)
+              }).then(res=>{
+                if(res.data.code == '0000'){
+                  that.open();
+                }
+              })
+            }
           }else {
-            that.changePwd();
+            if(that.radio2 == 1){
+              department = '网安'
+            }else if(that.radio2 == 2){
+              department = '司法'
+            }else if(that.radio2 == 4){
+              department = '经侦'
+            }else if(that.radio2 == 5){
+              department = '刑侦'
+            }
+            let data = {
+              name:that.sqName,
+              contactWay:that.sqTel,
+              workNo:that.sqNumber,
+              department:department,
+              area:that.addressT,
+              referrer:that.sqPeople,
+              email:that.email
+            }
+            that.ajax({
+              method:'post',
+              url:that.Config.baseUrl2+"/member/apply",
+              data:that.qs.stringify(data)
+            }).then(res=>{
+              if(res.data.code == '0000'){
+                that.open();
+              }
+            })
           }
+
         }
+      },
+      sqClick(){
+        let that = this;
+        that.loginStep = 4;
+        that.radio2 = 0;
+      },
+      open() {
+        let that = this;
+        this.$alert('我们将在1个工作日内与您联系，请您耐心等待', '提交成功', {
+          confirmButtonText: '确定',
+          callback: action => {
+            that.backLogin();
+          }
+        });
       }
     },
     mounted(){
@@ -186,6 +359,7 @@
       window.addEventListener("resize", () => {
         $(".login").css('width',$(window).width() + 'px');
         $(".login").css('height',$(window).height()+ 'px');
+        // $("#chart").css('height',$(window).height()-113 +'px');
       });
     }
   }
@@ -268,7 +442,6 @@
     align-items: center;
     background: #FFFFFF;
     border-radius: 0px 2px 2px 0px;
-    position: relative;
   }
   /**/
   .right1{
@@ -289,13 +462,6 @@
     background: #F1F1F2;
     border: 1px solid #E6E6E6;
     border-radius: 2px;
-    margin-top: 1.5rem;
-    display: flex;
-  }
-  .input2{
-    width: 21.25rem;
-    height: 2.5rem;
-    box-sizing: border-box;
     margin-top: 1.5rem;
     display: flex;
   }
@@ -354,7 +520,7 @@
     color: #FFFFFF;
     background: #00A0E9;
     border-radius: 2px;
-    margin-top: 68px;
+    margin-top: 2.5rem;
     cursor: pointer;
   }
   .register1{
@@ -363,70 +529,74 @@
     color: #666666;
     margin-top: 5rem;
   }
+  .register2{
+    font-family: PingFangSC-Regular;
+    font-size: 14px;
+    color: #666666;
+    /*margin-top: 5rem;*/
+    text-align: left;
+  }
+  .register2 span{
+    cursor: pointer;
+    color: #00A0E9;
+  }
   .register1 span{
     cursor: pointer;
     color: #00A0E9;
   }
-  .alWin{
-    width: 340px;
-    height: 100px;
-    position: absolute;
-    top: 220px;
-    left: 58px;
+  /**/
+  .right2{
+    display: flex;
+    justify-content: flex-start;
+  }
+  /**/
+  .right3{
     display: flex;
     flex-direction: column;
-    background: #FFFFFF;
-    box-shadow: 0 0 9px 0 rgba(193,210,215,0.50);
-    border-radius: 4px;
   }
-  .alwin1{
+  .mobMin{
     display: flex;
-    justify-content: flex-end;
-    box-sizing: border-box;
-    padding: 10px;
+    margin-top: 30px;
   }
-  .alwin1 img{
-    cursor: pointer;
-  }
-  .alwin2{
-    display: flex;
-    align-items: center;
-    opacity: 0.8;
-    font-family: PingFangSC-Regular;
-    font-size: 14px;
-    color: #000000;
-    line-height: 22px;
-    box-sizing: border-box;
-    padding-left: 27px;
-  }
-  .alwin2 img{
-    width: 1rem;
-    height: 1rem;
-  }
-  .xt1{
-    font-family: PingFangSC-Regular;
-    font-size: 14px;
-    color: #E02020;
-    display: flex;
-    align-items: center;
-  }
-  .inputText2{
+  .mobNumber{
+    background: #F1F1F2;
     border: 1px solid #E6E6E6;
     border-radius: 2px;
-    width: 100%;
-    flex: 1;
-    box-sizing: border-box;
-    padding: 0 1rem;
     outline: none;
+    box-sizing: border-box;
+    width: 12.25rem;
+    height: 2.5rem;
+    padding: 0 0.75rem;
     font-family: PingFangSC-Regular;
     font-size: 1rem;
     color: #333333;
-    opacity: 0.5;
+    margin-right: 1rem;
   }
-  .pwdS{
+  .code{
+    width: 8rem;
+    height: 2.5rem;
+    background: #00A0E9;
+    border-radius: 2px;
     font-family: PingFangSC-Regular;
-    font-size: 12px;
-    color: #E02020;
-    margin-top: 6px;
+    font-size: 1rem;
+    color: #FFFFFF;
+    letter-spacing: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+  .radio{
+    margin-top: 24px;
+  }
+  .mct{
+    font-family: PingFangSC-Regular;
+    font-size: 16px;
+    color: rgba(0,0,0,0.85);
+  }
+  .addressT{
+    display: flex;
+    align-items: center;
+    margin-top: 1.5rem;
   }
 </style>

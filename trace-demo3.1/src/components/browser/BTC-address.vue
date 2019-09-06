@@ -778,7 +778,7 @@
     width: 100%;
     margin-top: 2.5rem;
     text-align: right;
-    margin-bottom: 3rem;
+    /*margin-bottom: 3rem;*/
   }
   .coinBase{
     /*font-family: PingFangSC-Regular;*/

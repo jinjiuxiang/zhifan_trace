@@ -1,7 +1,7 @@
 <template>
   <div class="photo">
     <div class="first">
-      <span class="addr">地址：{{key}}<span style="margin-left: 32px;color: #00A0E9;font-family: PingFangSC-Regular;font-size: 16px">地址所属：<span v-show="addrData.entity == null">暂无标注</span><span v-show="addrData.entity != null && addrData.entity != ''">[{{addrData.entity}}]</span></span>&nbsp;<span style="font-size: 16px;font-family: PingFangSC-Regular"></span></span>
+      <span class="addr">地址：{{key}}<span style="margin-left: 32px;color: #00A0E9;font-family: PingFangSC-Regular;font-size: 16px">所属钱包：[{{addrData.walletId}}]</span>&nbsp;<span style="font-size: 16px;font-family: PingFangSC-Regular">（共{{addrData.walletSize}}个地址）</span></span>
       <span class="newTime">数据更新时间：{{addrData.dataExpiration}}</span>
     </div>
     <div class="ltc">
@@ -14,8 +14,8 @@
       </div>
     </div>
     <!---->
-    <div style="display: flex; width: 100%;box-sizing: border-box;padding: 0 0px 0 30px;margin-top: 1.5rem;flex-direction: column">
-      <div class="ut" v-show="num == 0"  style="margin-right: 40px;display: flex;justify-content: space-between">
+    <div style="display: flex; width: 100%;box-sizing: border-box;padding: 0 40px 0 30px;margin-top: 1.5rem;">
+      <div class="ut" v-show="num == 0"  style="margin-right: 40px;display: flex;flex-direction: column">
         <p class="newD11">
           <span class="newLabel">余额</span>
           <span class="newText balance">{{addrData.addressBalance}}BTC</span>
@@ -28,8 +28,12 @@
           <span class="newLabel">总转出次数</span>
           <span class="newText">{{addrData.addressOutputTxNum}}次</span>
         </p>
+        <p class="newD14">
+          <span class="newLabel">常用登录地点</span>
+          <span class="newText">-</span>
+        </p>
       </div>
-      <div class="ut" v-show="num == 0" style="margin-right: 40px;display: flex;justify-content: space-between">
+      <div class="ut" v-show="num == 0" style="margin-right: 40px;display: flex;flex-direction: column">
         <p class="newD15">
           <span class="newLabel"><span>最新交易</span> <span class="val">{{addrData.addressLatestTxTime}}</span>
 </span>
@@ -43,8 +47,12 @@
           <span class="newLabel">总转出额度</span>
           <span class="newText reduce">{{addrData.addressTotalOutValue}}BTC</span>
         </p>
+        <p class="newD18">
+          <span class="newLabel">常用IP</span>
+          <span class="newText">-</span>
+        </p>
       </div>
-      <div class="ut" v-show="num == 1" style="margin-right: 40px;display: flex;justify-content: space-between">
+      <div class="ut" v-show="num == 1" style="margin-right: 40px;display: flex;flex-direction: column">
         <p class="newD11">
           <span class="newLabel">余额</span>
           <span class="newText balance">{{wallData.walletBalance}}BTC</span>
@@ -57,8 +65,12 @@
           <span class="newLabel">总转出次数</span>
           <span class="newText">{{wallData.walletOutputTxNum}}次</span>
         </p>
+        <p class="newD14">
+          <span class="newLabel">常用登录地点</span>
+          <span class="newText">-</span>
+        </p>
       </div>
-      <div class="ut" v-show="num == 1" style="margin-right: 40px;display: flex;justify-content: space-between">
+      <div class="ut" v-show="num == 1" style="margin-right: 40px;display: flex;flex-direction: column">
         <p class="newD15">
           <span class="newLabel"><span>最新交易</span> <span class="val">{{wallData.walletLatestTxTime}}</span>
 </span>
@@ -72,6 +84,23 @@
           <span class="newLabel">总转出额度</span>
           <span class="newText reduce">{{wallData.walletTotalOutValue}}BTC</span>
         </p>
+        <p class="newD18">
+          <span class="newLabel">常用IP</span>
+          <span class="newText">-</span>
+        </p>
+      </div>
+      <div style="margin-right: 40px" v-loading="loadingM2"
+           element-loading-text="数据加载中"
+           element-loading-spinner="el-icon-loading"
+           element-loading-background="rgba(0, 0, 0, 0.8)">
+        <div id="pie1" style="height: 431px;margin-top: 21px;background: #24262C;box-sizing: border-box;padding: 12px"></div>
+      </div>
+      <div style="" v-loading="loadingM2"
+           element-loading-text="数据加载中"
+           element-loading-spinner="el-icon-loading"
+           element-loading-background="rgba(0, 0, 0, 0.8)">
+        <div id="pie2" style="height: 431px;margin-top: 21px;background: #24262C;box-sizing: border-box;padding: 12px"></div>
+
       </div>
     </div>
     <div style="box-sizing: border-box;height: 486px;margin-top: 40px;display: flex;justify-content: center;box-sizing: border-box;padding:28px;background: #24262C;margin:40px 28px" v-loading="loadingM"
@@ -125,6 +154,8 @@
           myChart24:null,
           myChart25:null,
           myChart26:null,
+          myChartPie1:null,
+          myChartPie2:null,
           chartAll:{},
           chartAll2:{},
           chartAll3:{},
@@ -827,6 +858,146 @@
 
           that.myChart26.setOption(option);
         },
+        drawMainPie1(xData,yData1,yData2){
+          let that = this;
+          let option = {
+            title: {
+              text: '资金来源分布',
+              textStyle:{
+                color:'#fff'
+              }
+            },
+            tooltip: {
+              trigger: 'item',
+              formatter: "{b}: ({d}%)"
+            },
+            legend: {
+              orient: 'horizontal',
+              data:yData1,
+              y:'bottom',
+              textStyle:{
+                color:'#fff'
+              },
+              type:"scroll",
+              pageTextStyle:{
+                color:"#fff"
+              }
+            },
+            graphic:{
+              type:'text',
+              left:'center',
+              top:'center',
+              style:{
+                text:'总转入次数\n\n'+yData2,
+                textAlign:'center',
+                fill:'#fff',
+                fontSize:16,
+                width:30,
+                height:30
+              }
+            },
+            series: [
+              {
+                name:'访问来源',
+                type:'pie',
+                radius: ['50%', '70%'],
+                avoidLabelOverlap: false,
+                label: {
+                  normal: {
+                    show: false,
+                  },
+                  emphasis: {
+                    show: false,
+                    textStyle: {
+                      fontSize: '30',
+                      fontWeight: 'bold'
+                    }
+                  }
+                },
+                labelLine: {
+                  normal: {
+                    show: false
+                  }
+                },
+                data:xData
+              }
+            ]
+          };
+          // 使用刚指定的配置项和数据显示图表。
+          that.loadingM2 = false;
+
+          that.myChartPie1.setOption(option);
+        },
+        drawMainPie2(xData,yData1,yData2){
+          let that = this;
+          let option = {
+            title: {
+              text: '资金去向分布',
+              textStyle:{
+                color:'#fff'
+              }
+            },
+            tooltip: {
+              trigger: 'item',
+              formatter: "{b}: ({d}%)"
+            },
+            legend: {
+              orient: 'horizontal',
+              y:'bottom',
+              data:yData1,
+              textStyle:{
+                color:'#fff'
+              },
+              type:"scroll",
+              pageTextStyle:{
+                color:"#fff"
+              }
+            },
+            graphic:{
+              type:'text',
+              left:'center',
+              top:'center',
+              style:{
+                text:'总转出次数\n\n'+yData2,
+                textAlign:'center',
+                fill:'#fff',
+                fontSize:16,
+                width:30,
+                height:30
+              }
+            },
+            series: [
+              {
+                name:'访问来源',
+                type:'pie',
+                radius: ['50%', '70%'],
+                avoidLabelOverlap: false,
+                label: {
+                  normal: {
+                    show: false,
+                  },
+                  emphasis: {
+                    show: false,
+                    textStyle: {
+                      fontSize: '30',
+                      fontWeight: 'bold'
+                    }
+                  }
+                },
+                labelLine: {
+                  normal: {
+                    show: false
+                  }
+                },
+                data:xData
+              }
+            ]
+          };
+          // 使用刚指定的配置项和数据显示图表。
+          that.loadingM2 = false;
+
+          that.myChartPie2.setOption(option);
+        },
         getSearch(key){
           let that = this;
           that.key = key;
@@ -912,6 +1083,8 @@
           that.myChart24 = that.$echarts.init(document.getElementById('mainBot24'),'macarons');
           that.myChart25 = that.$echarts.init(document.getElementById('mainBot25'),'macarons');
           that.myChart26 = that.$echarts.init(document.getElementById('mainBot26'),'macarons');
+          that.myChartPie1 = that.$echarts.init(document.getElementById('pie1'),'macarons');
+          that.myChartPie2 = that.$echarts.init(document.getElementById('pie2'),'macarons');
           that.drawMain21(that.chartAll.dayTxnCount.x,that.chartAll.dayTxnCount.in,that.chartAll.dayTxnCount.out)
           that.drawMain22(that.chartAll.dayTxnValue.x,that.chartAll.dayTxnValue.in,that.chartAll.dayTxnValue.out)
           that.drawMain23(that.chartAll.weekInCount.x,that.chartAll.weekInCount.y)
@@ -921,9 +1094,13 @@
         },
         txnNumAjax11(){
           let that = this;
+          that.drawMainPie1(that.chartAll3.input,that.chartAll3.inputArr,that.addrData.addressIncomingTxNum);
+          that.drawMainPie2(that.chartAll3.output,that.chartAll3.outputArr,that.addrData.addressOutputTxNum);
         },
         txnNumAjax12(){
           let that = this;
+          that.drawMainPie1(that.chartAll4.input,that.chartAll4.inputArr,that.wallData.walletIncomingTxNum);
+          that.drawMainPie2(that.chartAll4.output,that.chartAll4.outputArr,that.wallData.walletOutputTxNum);
         },
         txnNumAjax2(){
           let that = this;
@@ -933,6 +1110,8 @@
           that.myChart24 = that.$echarts.init(document.getElementById('mainBot24'),'macarons');
           that.myChart25 = that.$echarts.init(document.getElementById('mainBot25'),'macarons');
           that.myChart26 = that.$echarts.init(document.getElementById('mainBot26'),'macarons');
+          that.myChartPie1 = that.$echarts.init(document.getElementById('pie1'),'macarons');
+          that.myChartPie2 = that.$echarts.init(document.getElementById('pie2'),'macarons');
           that.drawMain21(that.chartAll2.dayTxnCount.x,that.chartAll2.dayTxnCount.in,that.chartAll2.dayTxnCount.out)
           that.drawMain22(that.chartAll2.dayTxnValue.x,that.chartAll2.dayTxnValue.in,that.chartAll2.dayTxnValue.out)
           that.drawMain23(that.chartAll2.weekInCount.x,that.chartAll2.weekInCount.y)
@@ -996,7 +1175,7 @@
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method:"get",
-            url:that.Config.baseUrl3+'/v4Manager/api/address/txn/distribution',
+            url:that.Config.baseUrl3+'/v3Manager/api/address/txn/distribution',
             params:{
               address:address,
               checkpoint:that.Cookies.get('checkpoint')
@@ -1017,7 +1196,7 @@
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method:"get",
-            url:that.Config.baseUrl3+'/v4Manager/api/wallet/txn/distribution',
+            url:that.Config.baseUrl3+'/v3Manager/api/wallet/txn/distribution',
             params:{
               address:address,
               checkpoint:that.Cookies.get('checkpoint')
@@ -1039,7 +1218,7 @@
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method:"get",
-            url:that.Config.baseUrl3+'/v4Manager/api/address/coinflow',
+            url:that.Config.baseUrl3+'/v3Manager/api/address/coinflow',
             params:{
               address:address,
               checkpoint:that.Cookies.get('checkpoint')
@@ -1078,7 +1257,7 @@
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method:"get",
-            url:that.Config.baseUrl3+'/v4Manager/api/wallet/coinflow',
+            url:that.Config.baseUrl3+'/v3Manager/api/wallet/coinflow',
             params:{
               address:address,
               checkpoint:that.Cookies.get('checkpoint')
@@ -1118,7 +1297,7 @@
           that.ajax.defaults.headers.get['token'] = that.Cookies.get("token");
           that.ajax({
             method:"get",
-            url:that.Config.baseUrl3+'/v4Manager/api/wallet/large',
+            url:that.Config.baseUrl3+'/v3Manager/api/wallet/large',
             params:{
               address:address,
               checkpoint:that.Cookies.get('checkpoint')
@@ -1166,6 +1345,8 @@
               wai = 1400;
             }
           $("#mainBot").width(wai-60);
+          $("#pie1").width((wai-772)/2);
+          $("#pie2").width((wai-772)/2);
           $("#mainBot2").width(wai/2-105);
           $("#mainBot22").width(wai/2-105);
           $("#mainBot23").width(wai/2-105);
@@ -1185,6 +1366,8 @@
             $("#mainBot24").width(wai/2);
             $("#mainBot25").width(wai/2);
             $("#mainBot26").width(wai/2);
+            $("#pie1").width((wai-772)/2);
+            $("#pie2").width((wai-772)/2);
             // $("#pie1").width(wai/4);
             // $("#pie2").width(wai/4);
             this.myChart2.resize();
@@ -1194,6 +1377,8 @@
             this.myChart24.resize();
             this.myChart25.resize();
             this.myChart26.resize();
+            this.myChartPie1.resize();
+            this.myChartPie2.resize();
           });
           that.key = that.Cookies.get("key");
 
@@ -1328,18 +1513,17 @@
   .newD18{background: url("./../../assets/img/ip.png");}
   .newLabel{
     font-family: PingFangSC-Regular;
-    font-size: 1rem;
+    font-size: 0.875rem;
     color: #FFFFFF;
     display: flex;
     justify-content: space-between;
-    padding-left: 16px;
   }
   .newText{
     font-family: PingFangSC-Semibold;
-    font-size: 30px;
+    font-size: 1.25rem;
     margin-top: 0.75rem;
     color: #FFFFFF;
-    padding-left: 16px;
+    padding: 0;
 
   }
   .balance{
@@ -1359,15 +1543,14 @@
     margin-left: -8px;
   }
   .ut p{
-    width: calc((100% - 80px) / 3) !important;
-    height: 160px;
+    width: 17.5rem;
+    height: 5.75rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     box-sizing: border-box;
     padding: 1rem 1.5rem;
     margin-top: 21px;
-    background-size: 100%;
     /*background: red;*/
   }
 </style>

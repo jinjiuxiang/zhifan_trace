@@ -4,12 +4,36 @@
       <span class="space"></span>
       <div class="detail">
         <div class="tab">
-          <span @click="tabChange($event,3)" class="tabSel utf">地址信息</span>
+          <span @click="tabChange($event,3)" class="tabSel utf">区块浏览器</span>
           <span @click="tabChange($event,1)" class="utf">用户画像</span>
+          <span @click="tabChange($event,0)" >智能追踪</span>
+          <span @click="tabChange($event,2)" >手动追踪</span>
         </div>
         <div style="position: relative;box-sizing: border-box">
           <browser v-show="tabShow==3"></browser>
           <photo  v-show="tabShow==1" ref="photo"></photo>
+          <trace v-if="level !=0" v-show="tabShow==0" ref="trace"></trace>
+          <handelTRace v-if="level==2" v-show="tabShow==2" v-on:walletClick="walletClick" ref="handelTRace" v-on:stavePhoto="stavePhoto" v-on:successClick="successClick" v-on:failClick="failClick"></handelTRace>
+          <!--<div class="noKt" v-if="level ==0" v-show="tabShow==1">用户画像没有开通</div>-->
+          <div class="noKt" v-if="level ==0" v-show="tabShow==0">
+            <span class="oo">暂无使用权限，请联系Chaindigg开通，联系电话：<span>400-6988-698</span></span>
+            <el-carousel :interval="3000" arrow="always" height="580px" :initial-index=0 :autoplay="autoplay">
+              <el-carousel-item>
+                <img class="dd" src="./../assets/img/group1.png" alt="">
+              </el-carousel-item>
+              <el-carousel-item>
+                <img class="dd" src="./../assets/img/group2.png" alt="">
+              </el-carousel-item>
+              <el-carousel-item>
+                <img class="dd" src="./../assets/img/group3.png" alt="">
+              </el-carousel-item>
+            </el-carousel>
+          </div>
+          <div class="noKt" v-if="level !=2" v-show="tabShow==2">
+            <span class="oo">暂无使用权限，请联系Chaindigg开通，联系电话：<span>400-6988-698</span></span>
+
+            <img style="width: auto;height: 580px;display: flex;margin: 0 auto" src="./../assets/img/tp.png" alt="">
+          </div>
         </div>
       </div>
       <div class="changePwd" v-show="changePwd">
@@ -34,6 +58,38 @@
           <img class="tf" @click="cancelClick" src="./../assets/img/hold.png" alt="">
         </div>
       </div>
+      <div class="saveChart" @click="stavePhoto" v-if="level !=0" v-show="tabShow==0">保存图谱</div>
+      <div class="saveChart" @click="stavePhoto2" v-if="level ==2" v-show="tabShow==2">保存图谱</div>
+      <div class="newTime" v-if="level !=0" v-show="tabShow==0">
+        数据更新时间：{{newTime}}
+      </div>
+      <div class="newTime" v-if="level ==2" v-show="tabShow==2">
+        数据更新时间：{{newTime}}
+      </div>
+      <div class="saveHide" v-show="saveHide">
+        <div class="saveMin">
+          <span class="title">保存图谱</span>
+          <span class="desc">由于区块链上的数据在不断变化，下次打开次图谱时，可能会发生变化。</span>
+          <span class="label">请输入图谱名称</span>
+          <input type="text" class="saveText" v-model="chartName" @keyup.enter="trueClick">
+          <div class="btns">
+            <span class="true" @click="trueClick">确定</span>
+            <span class="false" @click="falseClick">取消</span>
+          </div>
+        </div>
+      </div>
+      <div class="saveHide" v-show="saveHide2">
+        <div class="saveMin">
+          <span class="title">保存图谱</span>
+          <span class="desc">由于区块链上的数据在不断变化，下次打开次图谱时，可能会发生变化。</span>
+          <span class="label">请输入图谱名称</span>
+          <input type="text" class="saveText" v-model="chartName2" @keyup.enter="trueClick2">
+          <div class="btns">
+            <span class="true" @click="trueClick2">确定</span>
+            <span class="false" @click="falseClick2">取消</span>
+          </div>
+        </div>
+      </div>
       <!---->
     </div>
 </template>
@@ -41,12 +97,15 @@
 <script>
     import headerVue from './detail/header';
     import photo from './detail/photo2';
+    import trace from './detail/trace';
+    import handelTRace from './detail/trace2'
     import browser from './detail/browser'
+    import bus from './../assets/eventBus'
     var vm;
     export default {
       name: "detail",
       components:{
-        headerVue,photo,browser
+        headerVue,photo,trace,handelTRace,browser
       },
       data(){
         vm = this;
@@ -79,6 +138,12 @@
           that.autoplay = true;
           $($event.currentTarget).addClass('tabSel');
           $($event.currentTarget).siblings().removeClass('tabSel');
+          if(that.level == 2){
+            that.$refs.trace.closeAll();
+            that.$refs.handelTRace.closeAll();
+          }else if(that.level == 2){
+            that.$refs.trace.closeAll();
+          }
         },
         //搜索
         getSearch(key){

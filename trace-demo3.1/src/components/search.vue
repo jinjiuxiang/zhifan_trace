@@ -46,6 +46,27 @@
 
         </div>
         <!---->
+        <div class="descMin2">
+          <span class="title">我的图谱</span>
+          <p class="header" v-show="topoShow && topoList.length > 0">
+            <span>名称</span>
+            <span>更新时间</span>
+          </p>
+          <div class="descMin2Box" v-show="topoShow">
+            <div class="descMin1Box2">
+              <div class="uf" style="margin: 40px auto" v-show="topoList.length == 0">暂无保存图谱</div>
+              <p class="case" v-for="site in topoList" v-show="topoList.length > 0">
+                <span class="caseName hash" @click="topoClick(site.graphType,site.searchHash,site.graphId)">{{site.name}}</span>
+                <span class="caseTime">{{site.createTime}}</span>
+              </p>
+            </div>
+            <div class="descMin1All" v-show="topohShow">
+              <span v-show="topoAllShow" @click="topoAllClick">展开 <img src="./../../static/img/down.png" alt=""></span>
+              <span v-show="!topoAllShow" @click="topoHideClick">收起 <img src="./../../static/img/up.png" alt=""></span>
+            </div>
+          </div>
+
+        </div>
       </div>
     <span class="fot"><span>Copyright 2019 北京知帆科技有限公司 版权所有 京ICP备17074962号</span>
       <span style="cursor: pointer" @click="linkClick"><img src="./../assets/img/min.jpg" alt="">京公网安备 11010802028427号</span></span>
@@ -691,7 +712,7 @@
 }
   .descBox{
     width: 44.25rem;
-    /*height: 24.625rem;*/
+    height: 24.625rem;
     margin-top: 3rem;
     box-sizing: border-box;
     padding: 1.5rem;
@@ -702,7 +723,7 @@
   .descMin1{
     height:154.5px;
     width: 100%;
-    /*border-bottom: 1px solid rgba(255,255,255,0.1);*/
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
   .descMin2{
     height:214.5px;
